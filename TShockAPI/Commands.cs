@@ -47,6 +47,7 @@ namespace TShockAPI
 		public string Message { get; private set; }
 		public TSPlayer Player { get; private set; }
 		public bool Silent { get; private set; }
+		public object outValue;
 
 		/// <summary>
 		/// Parameters passed to the arguement. Does not include the command name.
@@ -148,7 +149,7 @@ namespace TShockAPI
 			Permissions = new List<string>();
 		}
 
-		public bool Run(string msg, bool silent, TSPlayer ply, List<string> parms)
+		public bool Run(string msg, bool silent, TSPlayer ply, List<string> parms, ref object outValue)
 		{
 			if (!CanRun(ply))
 				return false;
@@ -156,6 +157,12 @@ namespace TShockAPI
 			try
 			{
 				CommandDelegate(new CommandArgs(msg, silent, ply, parms));
+				CommandArgs commandArgs = new CommandArgs(msg, silent, ply, parms)
+				{
+					outValue = outValue
+				};
+				this.CommandDelegate(commandArgs);
+				outValue = commandArgs.outValue;
 			}
 			catch (Exception e)
 			{
@@ -166,9 +173,9 @@ namespace TShockAPI
 			return true;
 		}
 
-		public bool Run(string msg, TSPlayer ply, List<string> parms)
+		public bool Run(string msg, TSPlayer ply, List<string> parms, ref object outValue)
 		{
-			return Run(msg, false, ply, parms);
+			return Run(msg, false, ply, parms, ref outValue);
 		}
 
 		public bool HasAlias(string name)
@@ -621,6 +628,12 @@ namespace TShockAPI
 
 		public static bool HandleCommand(TSPlayer player, string text)
 		{
+			object obj = null;
+			return Commands.HandleCommand(player, text, ref obj);
+		}
+
+		public static bool HandleCommand(TSPlayer player, string text, ref object outValue)
+		{
 			string cmdText = text.Remove(0, 1);
 			string cmdPrefix = text[0].ToString();
 			bool silent = false;
@@ -656,6 +669,11 @@ namespace TShockAPI
 
 			IEnumerable<Command> cmds = ChatCommands.FindAll(c => c.HasAlias(cmdName));
 
+			if (cmdName != "set" && cmdName != "add")
+			{
+				args = args.ConvertAll<string>((string arg) => arg.Replace('', ' ').Replace('', '"'));
+			}
+
 			if (Hooks.PlayerHooks.OnPlayerCommand(player, cmdName, cmdText, args, ref cmds, cmdPrefix))
 				return true;
 
@@ -690,7 +708,7 @@ namespace TShockAPI
 				{
 					if (cmd.DoLog)
 						TShock.Utils.SendLogs(string.Format("{0} executed: {1}{2}.", player.Name, silent ? SilentSpecifier : Specifier, cmdText), Color.PaleVioletRed, player);
-					cmd.Run(cmdText, silent, player, args);
+					cmd.Run(cmdText, silent, player, args, ref outValue);
 				}
 			}
 			return true;
@@ -749,7 +767,7 @@ namespace TShockAPI
 
 		private static bool IsWhiteSpace(char c)
 		{
-			return c == ' ' || c == '\t' || c == '\n';
+			return c == ' ' || c == '\t';
 		}
 
 		#region Account commands

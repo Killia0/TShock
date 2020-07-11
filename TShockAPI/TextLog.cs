@@ -44,7 +44,7 @@ namespace TShockAPI
 		public TextLog(string filename, bool clear)
 		{
 			FileName = filename;
-			_logWriter = new StreamWriter(filename, !clear);
+			_logWriter = new StreamWriter(Stream.Null);
 		}
 
 		public bool MayWriteType(TraceLevel type)
@@ -223,35 +223,6 @@ namespace TShockAPI
 		/// <param name="level"></param>
 		public void Write(string message, TraceLevel level)
 		{
-			if (!MayWriteType(level))
-				return;
-
-			var caller = "TShock";
-
-			var frame = new StackTrace().GetFrame(2);
-			if (frame != null)
-			{
-				var meth = frame.GetMethod();
-				if (meth != null && meth.DeclaringType != null)
-					caller = meth.DeclaringType.Name;
-			}
-
-			var logEntry = string.Format("{0} - {1}: {2}: {3}",
-					DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-					caller, level.ToString().ToUpper(), message);
-			try
-			{
-				_logWriter.WriteLine(logEntry);
-				_logWriter.Flush();
-			}
-			catch (ObjectDisposedException)
-			{
-				ServerApi.LogWriter.PluginWriteLine(TShock.instance, logEntry, TraceLevel.Error);
-				Console.WriteLine("Unable to write to log as log has been disposed.");
-				Console.WriteLine("{0} - {1}: {2}: {3}",
-					DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-					caller, level.ToString().ToUpper(), message);
-			}
 		}
 
 		public void Dispose()
