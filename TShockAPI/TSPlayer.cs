@@ -1094,7 +1094,6 @@ namespace TShockAPI
 			PlayerHooks.OnPlayerLogout(this);
 			if (Main.ServerSideCharacter)
 			{
-				IsDisabledForSSC = true;
 				if (!IsDisabledPendingTrashRemoval && (!Dead || TPlayer.difficulty != 2))
 				{
 					PlayerData.CopyCharacter(this);

@@ -1587,13 +1587,7 @@ namespace TShockAPI
 
 			if (!player.IsLoggedIn)
 			{
-				if (Main.ServerSideCharacter)
-				{
-					player.IsDisabledForSSC = true;
-					player.SendErrorMessage(String.Format("Server side characters is enabled! Please {0}register or {0}login to play!", Commands.Specifier));
-					player.LoginHarassed = true;
-				}
-				else if (Config.RequireLogin)
+				if (Config.RequireLogin)
 				{
 					player.SendErrorMessage("Please {0}register or {0}login to play!", Commands.Specifier);
 					player.LoginHarassed = true;
