@@ -156,7 +156,6 @@ namespace TShockAPI
 
 			try
 			{
-				CommandDelegate(new CommandArgs(msg, silent, ply, parms));
 				CommandArgs commandArgs = new CommandArgs(msg, silent, ply, parms)
 				{
 					outValue = outValue
