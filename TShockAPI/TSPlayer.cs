@@ -1306,16 +1306,123 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Gives an item to the player.
+		/// Gives an item to the player directly into their inventory.
 		/// </summary>
 		/// <param name="type">The item ID.</param>
 		/// <param name="stack">The item stack.</param>
 		/// <param name="prefix">The item prefix.</param>
 		public virtual void GiveItem(int type, int stack, int prefix = 0)
 		{
+			//Why relogic omitted 4143(Small mana star) from the set is beyond me
+			if (!Main.ServerSideCharacter || ItemID.Sets.IsAPickup[type] || type == 4143)
+			{
+				int number = Item.NewItem((int)this.X, (int)this.Y, this.TPlayer.width, this.TPlayer.height, type, stack, true, prefix, true, false);
+				this.SendData(PacketTypes.ItemDrop, "", number, 0f, 0f, 0f, 0);
+				return;
+			}
+			Item item = new Item();
+			item.netDefaults(type);
+			if (stack > item.maxStack)
+			{
+				item.stack = item.maxStack;
+			}
+			else
+			{
+				item.stack = stack;
+			}
+			item.Prefix(prefix);
+			if (this.TPlayer.ItemSpace(item).CanTakeItemToPersonalInventory)
+			{
+				//Items that act like ammo but dont go in ammo slot
+				bool flag = item.type != 75 && item.type != 169 && item.type != 23 && item.type != 408 && item.type != 370 && item.type != 1246;
+				//Coins
+				if (type >= 71 && type <= 74)
+				{
+					for (int slot = 53; slot >= 50; slot--)
+					{
+						if (item.stack <= 0)
+						{
+							break;
+						}
+						if (this.TPlayer.inventory[slot].type == 0)
+						{
+							this.TPlayer.inventory[slot] = item;
+							NetMessage.SendData(5, this.Index, -1, null, this.Index, slot, prefix, 0f, 0, 0, 0);
+							return;
+						}
+						if (this.TPlayer.inventory[slot].type == item.type && this.TPlayer.inventory[slot].prefix == item.prefix && !item.uniqueStack && this.TPlayer.inventory[slot].stack < item.maxStack)
+						{
+							int stack2 = this.TPlayer.inventory[slot].stack;
+							this.TPlayer.inventory[slot].stack += Math.Min(item.stack, item.maxStack - this.TPlayer.inventory[slot].stack);
+							item.stack -= this.TPlayer.inventory[slot].stack - stack2;
+							NetMessage.SendData(5, this.Index, -1, null, this.Index, slot, prefix, 0f, 0, 0, 0);
+							if (item.stack <= 0)
+							{
+								return;
+							}
+						}
+					}
+				}
+				//Ammo
+				else if (item.ammo > 0 && !item.notAmmo && flag)
+				{
+					int slot = 57;
+					while (slot >= 54 && item.stack > 0)
+					{
+						if (slot < 50 || slot > 53)
+						{
+							if (this.TPlayer.inventory[slot].type == 0)
+							{
+								this.TPlayer.inventory[slot] = item;
+								NetMessage.SendData(5, this.Index, -1, null, this.Index, slot, prefix, 0f, 0, 0, 0);
+								return;
+							}
+							if (TPlayer.inventory[slot].type == item.type && TPlayer.inventory[slot].prefix == item.prefix && !item.uniqueStack && TPlayer.inventory[slot].stack < item.maxStack)
+							{
+								int stack3 = this.TPlayer.inventory[slot].stack;
+								TPlayer.inventory[slot].stack += Math.Min(item.stack, item.maxStack - this.TPlayer.inventory[slot].stack);
+								item.stack -= this.TPlayer.inventory[slot].stack - stack3;
+								NetMessage.SendData(5, this.Index, -1, null, this.Index, slot, prefix, 0f, 0, 0, 0);
+								if (item.stack == 0)
+								{
+									return;
+								}
+							}
+						}
+						slot--;
+					}
+				}
+				//Main Inventory
+				int slot2 = 0;
+				while (slot2 <= 49 && item.stack > 0)
+				{
+					if (this.TPlayer.inventory[slot2].type == 0)
+					{
+						this.TPlayer.inventory[slot2] = item;
+						NetMessage.SendData(5, this.Index, -1, null, this.Index, slot2, prefix, 0f, 0, 0, 0);
+						return;
+					}
+					if (this.TPlayer.inventory[slot2].type == item.type && this.TPlayer.inventory[slot2].prefix == item.prefix && !item.uniqueStack && this.TPlayer.inventory[slot2].stack < item.maxStack)
+					{
+						int stack4 = this.TPlayer.inventory[slot2].stack;
+						this.TPlayer.inventory[slot2].stack += Math.Min(item.stack, item.maxStack - this.TPlayer.inventory[slot2].stack);
+						item.stack -= this.TPlayer.inventory[slot2].stack - stack4;
+						NetMessage.SendData(5, this.Index, -1, null, this.Index, slot2, prefix, 0f, 0, 0, 0);
+						if (item.stack == 0)
+						{
+							return;
+						}
+					}
+					slot2++;
+				}
+			}
+		}
+
+		/*public virtual void GiveItem(int type, int stack, int prefix = 0)
+		{
 			int itemIndex = Item.NewItem((int)X, (int)Y, TPlayer.width, TPlayer.height, type, stack, true, prefix, true);
 			SendData(PacketTypes.ItemDrop, "", itemIndex);
-		}
+		}*/
 
 		/// <summary>
 		/// Sends an information message to the player.
