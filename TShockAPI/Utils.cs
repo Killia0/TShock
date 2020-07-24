@@ -1155,7 +1155,6 @@ namespace TShockAPI
 		internal void SetConsoleTitle(bool empty)
 		{
 			if (!TShock.PedguinServerEnabled)
-			{
 				Console.Title = string.Format("{0}{1}/{2} on {3} @ {4}:{5} (TShock for Terraria v{6})", new object[]
 				{
 					(!string.IsNullOrWhiteSpace(TShock.Config.ServerName)) ? (TShock.Config.ServerName + " - ") : "",
@@ -1166,15 +1165,6 @@ namespace TShockAPI
 					Netplay.ListenPort,
 					TShock.VersionNum
 				});
-				return;
-			}
-			Console.Title = string.Format("{0}/{1} on instance {2} @ *:{3}", new object[]
-			{
-				empty ? 0 : TShock.Utils.GetActivePlayerCount(),
-				TShock.Config.MaxSlots,
-				TShock.PrismSessionId,
-				Netplay.ListenPort
-			});
 		}
 
 		/// <summary>Determines the distance between two vectors.</summary>
