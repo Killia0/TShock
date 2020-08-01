@@ -2342,8 +2342,9 @@ namespace TShockAPI
 			{
 				args.Player.PlayerData.StoreSlot(slot, type, prefix, stack);
 			}
-			else if (Main.ServerSideCharacter && TShock.Config.DisableLoginBeforeJoin && !bypassTrashCanCheck &&
-			         args.Player.HasSentInventory && !args.Player.HasPermission(Permissions.bypassssc))
+			else if (Main.ServerSideCharacter && TShock.Config.DisableLoginBeforeJoin && !bypassTrashCanCheck
+					&& TShock.UseSSCInventory && args.Player.HasSentInventory
+					&& !args.Player.HasPermission(Permissions.bypassssc))
 			{
 				// The player might have moved an item to their trash can before they performed a single login attempt yet.
 				args.Player.IsDisabledPendingTrashRemoval = true;
@@ -2384,7 +2385,7 @@ namespace TShockAPI
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
 
-					if (Main.ServerSideCharacter)
+					if (Main.ServerSideCharacter && TShock.UseSSCInventory)
 					{
 						if (args.Player.HasPermission(Permissions.bypassssc))
 						{
@@ -2923,7 +2924,7 @@ namespace TShockAPI
 					args.Player.IsLoggedIn = true;
 					args.Player.IsDisabledForSSC = false;
 
-					if (Main.ServerSideCharacter)
+					if (Main.ServerSideCharacter && TShock.UseSSCInventory)
 					{
 						if (args.Player.HasPermission(Permissions.bypassssc))
 						{
@@ -3771,7 +3772,7 @@ namespace TShockAPI
 				}
 			}
 
-			if (args.TPlayer.difficulty == 2 && Main.ServerSideCharacter && args.Player.IsLoggedIn)
+			if (args.TPlayer.difficulty == 2 && Main.ServerSideCharacter && TShock.UseSSCInventory && args.Player.IsLoggedIn)
 			{
 				if (TShock.CharacterDB.RemovePlayer(args.Player.Account.ID))
 				{

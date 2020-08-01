@@ -893,7 +893,7 @@ namespace TShockAPI
 		/// <returns>bool - True/false if it saved successfully</returns>
 		public bool SaveServerCharacter()
 		{
-			if (!Main.ServerSideCharacter)
+			if (!Main.ServerSideCharacter || !TShock.UseSSCInventory)
 			{
 				return false;
 			}
@@ -921,7 +921,7 @@ namespace TShockAPI
 		/// <returns>bool - True/false if it saved successfully</returns>
 		public bool SendServerCharacter()
 		{
-			if (!Main.ServerSideCharacter)
+			if (!Main.ServerSideCharacter || !TShock.UseSSCInventory)
 			{
 				return false;
 			}
@@ -1092,7 +1092,7 @@ namespace TShockAPI
 		public void Logout()
 		{
 			PlayerHooks.OnPlayerLogout(this);
-			if (Main.ServerSideCharacter)
+			if (Main.ServerSideCharacter && TShock.UseSSCInventory)
 			{
 				if (!IsDisabledPendingTrashRemoval && (!Dead || TPlayer.difficulty != 2))
 				{

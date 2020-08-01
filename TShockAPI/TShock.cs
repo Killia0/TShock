@@ -142,6 +142,9 @@ namespace TShockAPI
 		/// </summary>
 		public static string PrismSessionId { get; private set; } = null;
 
+		/// <summary> Whether to set a player's inventory with SSC </summary>
+		public static bool UseSSCInventory { get; private set; }
+
 		/// <summary>The TShock anti-cheat/anti-exploit system.</summary>
 		internal Bouncer Bouncer;
 
@@ -787,7 +790,8 @@ namespace TShockAPI
 				//Flags without arguments
 				.AddFlag("-logclear", () => LogClear = true)
 				.AddFlag("-autoshutdown", () => Main.instance.EnableAutoShutdown())
-				.AddFlag("-dump", () => Utils.Dump());
+				.AddFlag("-dump", () => Utils.Dump())
+				.AddFlag("-sscinv", () => UseSSCInventory = true);
 
 			CliParser.ParseFromSource(parms);
 		}
@@ -941,7 +945,8 @@ namespace TShockAPI
 				LastCheck = DateTime.UtcNow;
 			}
 
-			if (Main.ServerSideCharacter && (DateTime.UtcNow - LastSave).TotalMinutes >= ServerSideCharacterConfig.ServerSideCharacterSave)
+			if (Main.ServerSideCharacter && UseSSCInventory
+				&& (DateTime.UtcNow - LastSave).TotalMinutes >= ServerSideCharacterConfig.ServerSideCharacterSave)
 			{
 				foreach (TSPlayer player in Players)
 				{
@@ -1316,7 +1321,8 @@ namespace TShockAPI
 					Utils.Broadcast(tsplr.Name + " has left.", Color.Yellow);
 				Log.Info("{0} disconnected.", tsplr.Name);
 
-				if (tsplr.IsLoggedIn && !tsplr.IsDisabledPendingTrashRemoval && Main.ServerSideCharacter && (!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
+				if (tsplr.IsLoggedIn && !tsplr.IsDisabledPendingTrashRemoval && Main.ServerSideCharacter
+					&& UseSSCInventory && (!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
 				{
 					tsplr.PlayerData.CopyCharacter(tsplr);
 					CharacterDB.InsertPlayerData(tsplr);
