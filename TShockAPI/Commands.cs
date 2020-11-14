@@ -3580,7 +3580,7 @@ namespace TShockAPI
 							// Yes this is required because of localization
 							// User may have passed in localized name but itembans works on English names
 							string englishNameForStorage = EnglishLanguage.GetItemNameById(items[0].type);
-							TShock.Itembans.AddNewBan(englishNameForStorage);
+							TShock.ItemBans.DataModel.AddNewBan(englishNameForStorage);
 
 							// It was decided in Telegram that we would continue to ban
 							// projectiles based on whether or not their associated item was
@@ -3634,7 +3634,7 @@ namespace TShockAPI
 								return;
 							}
 
-							ItemBan ban = TShock.Itembans.GetItemBanByName(EnglishLanguage.GetItemNameById(items[0].type));
+							ItemBan ban = TShock.ItemBans.DataModel.GetItemBanByName(EnglishLanguage.GetItemNameById(items[0].type));
 							if (ban == null)
 							{
 								args.Player.SendErrorMessage("{0} is not banned.", items[0].Name);
@@ -3642,7 +3642,7 @@ namespace TShockAPI
 							}
 							if (!ban.AllowedGroups.Contains(args.Parameters[2]))
 							{
-								TShock.Itembans.AllowGroup(EnglishLanguage.GetItemNameById(items[0].type), args.Parameters[2]);
+								TShock.ItemBans.DataModel.AllowGroup(EnglishLanguage.GetItemNameById(items[0].type), args.Parameters[2]);
 								args.Player.SendSuccessMessage("{0} has been allowed to use {1}.", args.Parameters[2], items[0].Name);
 							}
 							else
@@ -3673,7 +3673,7 @@ namespace TShockAPI
 						}
 						else
 						{
-							TShock.Itembans.RemoveBan(EnglishLanguage.GetItemNameById(items[0].type));
+							TShock.ItemBans.DataModel.RemoveBan(EnglishLanguage.GetItemNameById(items[0].type));
 							args.Player.SendSuccessMessage("Unbanned " + items[0].Name + ".");
 						}
 					}
@@ -3705,7 +3705,7 @@ namespace TShockAPI
 								return;
 							}
 
-							ItemBan ban = TShock.Itembans.GetItemBanByName(EnglishLanguage.GetItemNameById(items[0].type));
+							ItemBan ban = TShock.ItemBans.DataModel.GetItemBanByName(EnglishLanguage.GetItemNameById(items[0].type));
 							if (ban == null)
 							{
 								args.Player.SendErrorMessage("{0} is not banned.", items[0].Name);
@@ -3713,7 +3713,7 @@ namespace TShockAPI
 							}
 							if (ban.AllowedGroups.Contains(args.Parameters[2]))
 							{
-								TShock.Itembans.RemoveGroup(EnglishLanguage.GetItemNameById(items[0].type), args.Parameters[2]);
+								TShock.ItemBans.DataModel.RemoveGroup(EnglishLanguage.GetItemNameById(items[0].type), args.Parameters[2]);
 								args.Player.SendSuccessMessage("{0} has been disallowed to use {1}.", args.Parameters[2], items[0].Name);
 							}
 							else
@@ -3756,7 +3756,7 @@ namespace TShockAPI
 						int pageNumber;
 						if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
 							return;
-						IEnumerable<string> itemNames = from itemBan in TShock.Itembans.ItemBans
+						IEnumerable<string> itemNames = from itemBan in TShock.ItemBans.DataModel.ItemBans
 														select itemBan.Name;
 						PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(itemNames),
 							new PaginationTools.Settings

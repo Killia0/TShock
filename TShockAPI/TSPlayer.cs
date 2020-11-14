@@ -882,7 +882,7 @@ namespace TShockAPI
 		{
 			get
 			{
-				for (int i = 3; i < 8; i++)
+				for (int i = 3; i < 10; i++)
 					yield return TPlayer.armor[i];
 			}
 		}
@@ -1275,9 +1275,23 @@ namespace TShockAPI
 		/// <returns>true if the tile square was sent successfully, else false</returns>
 		public virtual bool SendTileSquare(int x, int y, int size = 10)
 		{
+			return SendTileRect((short)x, (short)y, (byte)size, (byte)size);
+		}
+
+		/// <summary>
+		/// Sends a rectangle of tiles at a location with the given length and width. 
+		/// </summary>
+		/// <param name="x">The x coordinate the rectangle will begin at</param>
+		/// <param name="y">The y coordinate the rectangle will begin at</param>
+		/// <param name="width">The width of the rectangle</param>
+		/// <param name="length">The length of the rectangle</param>
+		/// <param name="changeType">Optional change type. Default None</param>
+		/// <returns></returns>
+		public virtual bool SendTileRect(short x, short y, byte width = 10, byte length = 10, TileChangeType changeType = TileChangeType.None)
+		{
 			try
 			{
-				SendData(PacketTypes.TileSendSquare, "", size, x, y);
+				NetMessage.SendTileSquare(Index, x, y, width, length, changeType);
 				return true;
 			}
 			catch (Exception ex)
@@ -1297,8 +1311,8 @@ namespace TShockAPI
 		/// <returns>True or false, depending if the item passed the check or not.</returns>
 		public bool GiveItemCheck(int type, string name, int stack, int prefix = 0)
 		{
-			if ((TShock.Itembans.ItemIsBanned(name) && TShock.Config.PreventBannedItemSpawn) &&
-			    (TShock.Itembans.ItemIsBanned(name, this) || !TShock.Config.AllowAllowedGroupsToSpawnBannedItems))
+			if ((TShock.ItemBans.DataModel.ItemIsBanned(name) && TShock.Config.PreventBannedItemSpawn) &&
+			    (TShock.ItemBans.DataModel.ItemIsBanned(name, this) || !TShock.Config.AllowAllowedGroupsToSpawnBannedItems))
 				return false;
 
 			GiveItem(type, stack, prefix);
@@ -1817,7 +1831,7 @@ namespace TShockAPI
 			if (RealPlayer && !ConnectionAlive)
 				return;
 
-			NetMessage.SendData((int)msgType, Index, -1, NetworkText.FromLiteral(text), number, number2, number3, number4, number5);
+			NetMessage.SendData((int)msgType, Index, -1, text == null ? null : NetworkText.FromLiteral(text), number, number2, number3, number4, number5);
 		}
 
 		/// <summary>
@@ -1895,7 +1909,7 @@ namespace TShockAPI
 		/// <returns>True if the player has permission to use the banned item.</returns>
 		public bool HasPermission(ItemBan bannedItem)
 		{
-			return TShock.Itembans.ItemIsBanned(bannedItem.Name, this);
+			return TShock.ItemBans.DataModel.ItemIsBanned(bannedItem.Name, this);
 		}
 
 		/// <summary>
