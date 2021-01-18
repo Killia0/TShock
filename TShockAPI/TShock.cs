@@ -57,7 +57,7 @@ namespace TShockAPI
 		/// <summary>VersionNum - The version number the TerrariaAPI will return back to the API. We just use the Assembly info.</summary>
 		public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
 		/// <summary>VersionCodename - The version codename is displayed when the server starts. Inspired by software codenames conventions.</summary>
-		public static readonly string VersionCodename = "Go to sleep Patrikkk, Icy, Chris, Death, Axeel, Zaicon, hakusaro, Zack, and Yoraiz0r <3";
+		public static readonly string VersionCodename = "Internal Minigame Server Tshock Fork";
 
 		/// <summary>SavePath - This is the path TShock saves its data in. This path is relative to the TerrariaServer.exe (not in ServerPlugins).</summary>
 		public static string SavePath = "tshock";
@@ -130,6 +130,18 @@ namespace TShockAPI
 		/// Used for implementing REST Tokens prior to the REST system starting up.
 		/// </summary>
 		public static Dictionary<string, SecureRest.TokenData> RESTStartupTokens = new Dictionary<string, SecureRest.TokenData>();
+
+		/// <summary>
+		/// Added configuration for Pedguin's Minigame Server functionality.
+		/// </summary>
+		public static bool PedguinServerEnabled { get; private set; }
+		/// <summary>
+		/// Value used for instance management for Pedguin's Minigame Server.
+		/// </summary>
+		public static string PrismSessionId { get; private set; } = null;
+
+		/// <summary> Whether to set a player's inventory with SSC </summary>
+		public static bool UseSSCInventory { get; private set; }
 
 		/// <summary>The TShock anti-cheat/anti-exploit system.</summary>
 		internal Bouncer Bouncer;
@@ -376,6 +388,8 @@ namespace TShockAPI
 
 				Initialized?.Invoke();
 
+				PedguinServerEnabled = (PrismSessionId != null);
+				Log.ConsoleInfo(string.Format("PedguinServer mode: {0}", PedguinServerEnabled ? "Enabled" : "Disabled"));
 				Log.ConsoleInfo("Welcome to TShock for Terraria!");
 				Log.ConsoleInfo("TShock comes with no warranty & is free software.");
 				Log.ConsoleInfo("You can modify & distribute it under the terms of the GNU GPLv3.");
@@ -740,12 +754,20 @@ namespace TShockAPI
 							Main.instance.autoCreate(size);
 						}
 					})
+				.AddFlag("-prismsessionid", (id) =>
+				{
+					if (!string.IsNullOrWhiteSpace(id))
+					{
+						PrismSessionId = id;
+					}
+				})
 
 
 				//Flags without arguments
 				.AddFlag("-logclear", () => LogClear = true)
 				.AddFlag("-autoshutdown", () => Main.instance.EnableAutoShutdown())
-				.AddFlag("-dump", () => Utils.Dump());
+				.AddFlag("-dump", () => Utils.Dump())
+				.AddFlag("-sscinv", () => UseSSCInventory = true);
 
 			CliParser.ParseFromSource(parms);
 		}
@@ -899,7 +921,8 @@ namespace TShockAPI
 				LastCheck = DateTime.UtcNow;
 			}
 
-			if (Main.ServerSideCharacter && (DateTime.UtcNow - LastSave).TotalMinutes >= ServerSideCharacterConfig.Settings.ServerSideCharacterSave)
+			if (Main.ServerSideCharacter && UseSSCInventory
+				&& (DateTime.UtcNow - LastSave).TotalMinutes >= ServerSideCharacterConfig.Settings.ServerSideCharacterSave)
 			{
 				foreach (TSPlayer player in Players)
 				{
@@ -1215,7 +1238,8 @@ namespace TShockAPI
 					Utils.Broadcast(tsplr.Name + " has left.", Color.Yellow);
 				Log.Info("{0} disconnected.", tsplr.Name);
 
-				if (tsplr.IsLoggedIn && !tsplr.IsDisabledPendingTrashRemoval && Main.ServerSideCharacter && (!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
+				if (tsplr.IsLoggedIn && !tsplr.IsDisabledPendingTrashRemoval && Main.ServerSideCharacter
+					&& UseSSCInventory && (!tsplr.Dead || tsplr.TPlayer.difficulty != 2))
 				{
 					tsplr.PlayerData.CopyCharacter(tsplr);
 					CharacterDB.InsertPlayerData(tsplr);
@@ -1486,13 +1510,7 @@ namespace TShockAPI
 
 			if (!player.IsLoggedIn)
 			{
-				if (Main.ServerSideCharacter)
-				{
-					player.IsDisabledForSSC = true;
-					player.SendErrorMessage(String.Format("Server side characters is enabled! Please {0}register or {0}login to play!", Commands.Specifier));
-					player.LoginHarassed = true;
-				}
-				else if (Config.Settings.RequireLogin)
+				if (Config.Settings.RequireLogin)
 				{
 					player.SendErrorMessage("Please {0}register or {0}login to play!", Commands.Specifier);
 					player.LoginHarassed = true;

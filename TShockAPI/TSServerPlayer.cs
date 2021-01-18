@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Microsoft.Xna.Framework;
 using OTAPI.Tile;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Utilities;
@@ -33,6 +34,8 @@ namespace TShockAPI
 	{
 		public static string AccountName = "ServerConsole";
 
+		public static ConcurrentQueue<string> ServerErrorMessages = new ConcurrentQueue<string>();
+
 		public TSServerPlayer()
 			: base("Server")
 		{
@@ -43,6 +46,10 @@ namespace TShockAPI
 		public override void SendErrorMessage(string msg)
 		{
 			SendConsoleMessage(msg, 255, 0, 0);
+			if (TShock.PedguinServerEnabled)
+			{
+				TSServerPlayer.ServerErrorMessages.Enqueue(msg);
+			}
 		}
 
 		public override void SendInfoMessage(string msg)
